@@ -278,7 +278,7 @@ function setupCalendarNavigation() {
 
 // Setup form submission
 function setupFormSubmission() {
-  document.getElementById('scheduleForm').addEventListener('submit', function (e) {
+  document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     if (!document.getElementById('lesson_date').value || !document.getElementById('time_slot').value) {
@@ -289,15 +289,36 @@ function setupFormSubmission() {
     const statusEl = document.getElementById('formStatus');
     statusEl.textContent = 'Sending request...';
 
-    emailjs.sendForm('service_qjt49i4', 'YOUR_TEMPLATE_ID', this)
-      .then(function () {
-        statusEl.textContent = 'Request sent! Jake will confirm by email shortly.';
-        document.getElementById('scheduleForm').reset();
-        document.getElementById('selectedSlotDisplay').style.display = 'none';
-        document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
-      }, function (error) {
-        statusEl.textContent = 'Something went wrong. Please try again or email jbsor2007@gmail.com directly.';
-        console.error('EmailJS error:', error);
-      });
+    try {
+      const formData = {
+        full_name: document.getElementById('full_name').value,
+        email: document.getElementById('email').value,
+        lesson_date: document.getElementById('lesson_date').value,
+        time_slot: document.getElementById('time_slot').value,
+        tail_number: document.getElementById('tail_number').value,
+      };
+
+      // Call Cloud Function to submit lesson request
+      const response = await fetch(
+        'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net/submitLessonRequest',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to submit request');
+      }
+
+      statusEl.textContent = 'Request sent! Jake will confirm by email shortly.';
+      document.getElementById('scheduleForm').reset();
+      document.getElementById('selectedSlotDisplay').style.display = 'none';
+      document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
+    } catch (error) {
+      statusEl.textContent = 'Something went wrong. Please try again or email jbsor2007@gmail.com directly.';
+      console.error('Error:', error);
+    }
   });
 }
