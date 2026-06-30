@@ -1,68 +1,179 @@
-/* ── Reset & base ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/*
+Jake's Flight Lessons
+Simplified from Tooplate 2117 Infinite Loop (https://www.tooplate.com/view/2117-infinite-loop)
+*/
 
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f5f5f0;
+  font-family: Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif;
+  font-size: 1.1em;
   color: #222;
-  line-height: 1.7;
+  margin: 0;
+  padding: 0;
 }
 
-/* ── Header ── */
-header {
-  background: #2b2d42;
-  color: #fff;
-  text-align: center;
-  padding: 3rem 1rem;
+a {
+  transition: all 0.3s ease;
+  color: #000;
+  text-decoration: underline;
+}
+a:hover,
+a:focus {
+  color: #555;
+}
+a:focus {
+  outline: none;
 }
 
-header h1 {
+.btn {
+  padding: 8px 32px;
+}
+
+.tm-section-pad-top {
+  padding-top: 70px;
+  padding-bottom: 50px;
+}
+
+.tm-section-alt {
+  background-color: #f5f5f5;
+}
+
+.tm-section-title {
   font-size: 2.4rem;
-  margin-bottom: 0.5rem;
+  font-weight: normal;
+  color: #000;
 }
 
-header p {
-  font-size: 1.1rem;
-  color: #adb5bd;
+.tm-subtitle {
+  font-size: 1.6rem;
+  font-weight: normal;
 }
 
-/* ── Main content ── */
-main {
-  max-width: 700px;
-  margin: 2.5rem auto;
-  padding: 0 1.5rem;
+.tm-section-desc {
+  max-width: 650px;
+  width: 100%;
+}
+
+/* Navbar */
+.tm-navbar {
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  background-color: #000;
+}
+.navbar-brand {
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+.navbar-brand:hover {
+  color: #ccc;
+}
+.tm-nav-link {
+  color: #fff;
+}
+.tm-nav-link:hover {
+  color: #ccc;
+}
+.navbar-toggler {
+  border: 1px solid white;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.navbar-toggler-icon {
+  color: white;
+}
+
+/* Hero */
+.tm-hero {
+  background-color: #000;
+  height: 70vh;
+  min-height: 375px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  justify-content: center;
+}
+.tm-hero-text-container {
+  width: 100%;
+}
+.tm-hero-title {
+  font-size: 3.2rem;
+}
+.tm-hero-subtitle {
+  font-size: 1.2rem;
 }
 
-section {
+/* Achievements */
+.tm-achievements-list {
+  max-width: 650px;
+  list-style: disc;
+  padding-left: 20px;
+}
+.tm-achievements-list li {
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+/* Scheduler form */
+.tm-input {
+  margin: 0 0 18px 0;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 4px;
+  border: 1px solid #999;
   background: #fff;
-  border-radius: 10px;
-  padding: 1.8rem 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  color: #222;
+}
+select.tm-input {
+  height: 44px;
+}
+.tm-btn-submit {
+  font-size: 0.95em;
+  color: #fff;
+  background-color: #000;
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: none;
+}
+.tm-btn-submit:hover {
+  background-color: #333;
 }
 
-h2 {
+.tm-unavailable {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.tm-unavailable h4 {
+  margin-bottom: 10px;
+}
+.tm-unavailable ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* Contact */
+.tm-contact-link {
   font-size: 1.3rem;
-  color: #2b2d42;
-  margin-bottom: 0.8rem;
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 0.4rem;
+  color: #000;
 }
 
-ul {
-  padding-left: 1.4rem;
+.tm-footer {
+  padding: 30px 15px 10px 15px;
+  color: #777;
 }
 
-li { margin-bottom: 0.4rem; }
+p {
+  line-height: 1.8;
+}
 
-a { color: #4361ee; }
-
-/* ── Footer ── */
-footer {
-  text-align: center;
-  padding: 2rem;
-  color: #999;
-  font-size: 0.9rem;
+@media (max-width: 767px) {
+  .navbar-collapse {
+    background-color: #000;
+    padding: 10px;
+    border-radius: 3px;
+  }
 }
