@@ -1,42 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Website</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Jake's Flight Lessons</title>
+    <link rel="stylesheet" href="fontawesome-5.5/css/all.min.css" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
 
-  <header>
-    <h1>Kyle Sorrell's Website</h1>
-    <p>Best Brother in the World</p>
-  </header>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+      (function () {
+        emailjs.init("IA_nnwX8_TyVgF09H");
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Hero -->
+    <section id="home" class="text-white tm-hero">
+      <nav class="navbar navbar-expand-md tm-navbar" id="tmNav">
+        <div class="container">
+          <a href="#home" class="navbar-brand">Jake's Flight Lessons</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fas fa-bars navbar-toggler-icon"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item"><a class="nav-link tm-nav-link" href="#home">Home</a></li>
+              <li class="nav-item"><a class="nav-link tm-nav-link" href="#about">About</a></li>
+              <li class="nav-item"><a class="nav-link tm-nav-link" href="#schedule">Schedule a Lesson</a></li>
+              <li class="nav-item"><a class="nav-link tm-nav-link" href="#contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
 
-  <main>
-    <section>
-      <h2>About Me</h2>
-      <p>blah blah blah blah</p>
+      <div class="text-center tm-hero-text-container">
+        <div class="tm-hero-text-container-inner">
+          <h1 class="tm-hero-title">Jake's Flight Lessons</h1>
+          <p class="tm-hero-subtitle">Learn to fly with a certified instructor</p>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>My Interests</h2>
-      <ul>
-        <li>Chess</li>
-        <li>Cooking</li>
-        <li>Music</li>
-      </ul>
+    <!-- About / Achievements -->
+    <section id="about" class="tm-section-pad-top">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 text-center mb-5">
+            <h2 class="tm-section-title">About Jake</h2>
+            <p class="mx-auto tm-section-desc">
+              Placeholder bio text goes here. A short paragraph introducing Jake, his background, and his approach to flight instruction.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <h3 class="tm-subtitle text-center mb-4">Achievements</h3>
+            <ul class="tm-achievements-list mx-auto">
+              <li>Placeholder achievement — e.g. Certified Flight Instructor (CFI), [Year]</li>
+              <li>Placeholder achievement — e.g. 1,000+ hours flight time</li>
+              <li>Placeholder achievement — e.g. Commercial Pilot License</li>
+              <li>Placeholder achievement — e.g. Instrument Rating</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>Contact</h2>
-      <p>You can reach me at: <a href="mailto:you@email.com">you@email.com</a></p>
+    <!-- Scheduler -->
+    <section id="schedule" class="tm-section-pad-top tm-section-alt">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 text-center mb-4">
+            <h2 class="tm-section-title">Schedule a Lesson</h2>
+            <p class="mx-auto tm-section-desc">
+              Submit your details below and Jake will confirm your requested lesson time by email.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-8 mx-auto">
+            <form id="scheduleForm">
+              <input id="full_name" name="full_name" type="text" placeholder="Full Name" class="tm-input" required />
+              <input id="email" name="email" type="email" placeholder="Your Email" class="tm-input" required />
+              <input id="lesson_date" name="lesson_date" type="date" class="tm-input" required />
+
+              <select id="time_slot" name="time_slot" class="tm-input" required>
+                <option value="" disabled selected>Select a Time Slot</option>
+                <option value="8:00 AM - 10:00 AM">8:00 AM - 10:00 AM</option>
+                <option value="10:00 AM - 12:00 PM">10:00 AM - 12:00 PM</option>
+                <option value="12:00 PM - 2:00 PM">12:00 PM - 2:00 PM</option>
+                <option value="2:00 PM - 4:00 PM">2:00 PM - 4:00 PM</option>
+                <option value="4:00 PM - 6:00 PM">4:00 PM - 6:00 PM</option>
+              </select>
+
+              <input id="tail_number" name="tail_number" type="text" placeholder="Aircraft Tail Number" class="tm-input" required />
+
+              <button type="submit" class="btn tm-btn-submit">Request Lesson</button>
+            </form>
+            <p id="formStatus" class="mt-3"></p>
+
+            <!-- Jake: list any dates/times you're NOT available here so clients can plan around it -->
+            <div class="tm-unavailable">
+              <h4>Unavailable</h4>
+              <ul id="unavailableList">
+                <li>Placeholder — e.g. July 4, all day</li>
+                <li>Placeholder — e.g. Every Sunday</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
-  </main>
 
-  <footer>
-    <p>Made by me · 2026</p>
-  </footer>
+    <!-- Contact -->
+    <section id="contact" class="tm-section-pad-top">
+      <div class="container text-center">
+        <h2 class="tm-section-title mb-4">Contact</h2>
+        <p>
+          <a href="mailto:jbsor2007@gmail.com" class="tm-contact-link">jbsor2007@gmail.com</a>
+        </p>
+      </div>
 
-</body>
+      <footer class="text-center small tm-footer">
+        <p class="mb-0">Copyright &copy; 2026 Jake's Flight Lessons</p>
+      </footer>
+    </section>
+
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/script.js"></script>
+  </body>
 </html>
