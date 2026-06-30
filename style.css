@@ -1,179 +1,239 @@
-/*
-Jake's Flight Lessons
-Simplified from Tooplate 2117 Infinite Loop (https://www.tooplate.com/view/2117-infinite-loop)
-*/
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   font-family: Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif;
   font-size: 1.1em;
   color: #222;
-  margin: 0;
-  padding: 0;
+  line-height: 1.8;
 }
 
 a {
-  transition: all 0.3s ease;
   color: #000;
   text-decoration: underline;
+  transition: color 0.3s ease;
 }
-a:hover,
-a:focus {
+
+a:hover {
   color: #555;
 }
-a:focus {
-  outline: none;
-}
 
-.btn {
-  padding: 8px 32px;
-}
-
-.tm-section-pad-top {
-  padding-top: 70px;
-  padding-bottom: 50px;
-}
-
-.tm-section-alt {
-  background-color: #f5f5f5;
-}
-
-.tm-section-title {
-  font-size: 2.4rem;
-  font-weight: normal;
-  color: #000;
-}
-
-.tm-subtitle {
-  font-size: 1.6rem;
-  font-weight: normal;
-}
-
-.tm-section-desc {
-  max-width: 650px;
-  width: 100%;
-}
-
-/* Navbar */
-.tm-navbar {
+/* Navigation */
+.navbar {
   position: fixed;
   width: 100%;
-  z-index: 1000;
   background-color: #000;
-}
-.navbar-brand {
   color: #fff;
-  font-size: 1.4rem;
-  font-weight: bold;
-  text-decoration: none;
-}
-.navbar-brand:hover {
-  color: #ccc;
-}
-.tm-nav-link {
-  color: #fff;
-}
-.tm-nav-link:hover {
-  color: #ccc;
-}
-.navbar-toggler {
-  border: 1px solid white;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-.navbar-toggler-icon {
-  color: white;
+  z-index: 1000;
+  padding: 15px 0;
+  top: 0;
 }
 
-/* Hero */
-.tm-hero {
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+}
+
+.logo:hover {
+  color: #ccc;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #ccc;
+}
+
+/* Hero Section */
+.hero {
   background-color: #000;
+  color: #fff;
   height: 70vh;
-  min-height: 375px;
-  position: relative;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-top: 60px;
 }
-.tm-hero-text-container {
-  width: 100%;
-}
-.tm-hero-title {
+
+.hero h1 {
   font-size: 3.2rem;
+  margin-bottom: 10px;
 }
-.tm-hero-subtitle {
+
+.hero p {
   font-size: 1.2rem;
 }
 
-/* Achievements */
-.tm-achievements-list {
+/* Sections */
+.section {
+  padding: 70px 20px 50px;
+}
+
+.section h2 {
+  font-size: 2.4rem;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.section h3 {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.alt-bg {
+  background-color: #f5f5f5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bio {
   max-width: 650px;
+  margin: 0 auto 50px;
+  text-align: center;
+}
+
+/* Achievements */
+.achievements {
+  max-width: 650px;
+  margin: 0 auto;
   list-style: disc;
   padding-left: 20px;
 }
-.tm-achievements-list li {
+
+.achievements li {
   margin-bottom: 12px;
-  line-height: 1.6;
 }
 
-/* Scheduler form */
-.tm-input {
-  margin: 0 0 18px 0;
+/* Form */
+.form {
+  max-width: 600px;
+  margin: 0 auto 30px;
+}
+
+.form input,
+.form select {
   width: 100%;
   padding: 10px 16px;
-  border-radius: 4px;
+  margin-bottom: 18px;
   border: 1px solid #999;
-  background: #fff;
-  color: #222;
+  border-radius: 4px;
+  font-size: 1em;
 }
-select.tm-input {
+
+.form select {
   height: 44px;
 }
-.tm-btn-submit {
-  font-size: 0.95em;
-  color: #fff;
-  background-color: #000;
+
+.btn-submit {
   width: 100%;
   padding: 10px;
-  border-radius: 4px;
+  background-color: #000;
+  color: #fff;
   border: none;
+  border-radius: 4px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-.tm-btn-submit:hover {
+
+.btn-submit:hover {
   background-color: #333;
 }
 
-.tm-unavailable {
-  margin-top: 30px;
+.form-status {
+  text-align: center;
+  margin: 15px 0;
+  font-weight: bold;
+}
+
+/* Unavailable Times */
+.unavailable-box {
+  max-width: 600px;
+  margin: 30px auto 0;
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  background-color: #fff;
 }
-.tm-unavailable h4 {
+
+.unavailable-box h4 {
   margin-bottom: 10px;
 }
-.tm-unavailable ul {
+
+.unavailable-box ul {
   margin: 0;
   padding-left: 20px;
 }
 
 /* Contact */
-.tm-contact-link {
+#contact {
+  text-align: center;
+}
+
+#contact a {
   font-size: 1.3rem;
-  color: #000;
 }
 
-.tm-footer {
-  padding: 30px 15px 10px 15px;
+/* Footer */
+footer {
+  background-color: #f5f5f5;
+  padding: 30px 20px;
+  text-align: center;
   color: #777;
+  font-size: 0.9em;
 }
 
-p {
-  line-height: 1.8;
-}
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-links {
+    gap: 15px;
+    font-size: 0.9em;
+  }
 
-@media (max-width: 767px) {
-  .navbar-collapse {
-    background-color: #000;
-    padding: 10px;
-    border-radius: 3px;
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .section h2 {
+    font-size: 1.8rem;
+  }
+
+  .section h3 {
+    font-size: 1.2rem;
   }
 }
