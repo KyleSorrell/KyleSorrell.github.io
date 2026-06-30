@@ -16,7 +16,7 @@
   <!-- Navigation -->
   <nav class="navbar">
     <div class="nav-container">
-      <a href="#home" class="logo">Jake's Flight Lessons</a>
+      <a href="#home" class="logo">Jake Sorrell Flight Lessons</a>
       <ul class="nav-links">
         <li><a href="#home">Home</a></li>
         <li><a href="#about">About</a></li>
@@ -28,8 +28,55 @@
 
   <!-- Hero Section -->
   <section id="home" class="hero">
-    <h1>Jake's Flight Lessons</h1>
+    <h1>Jake Sorrell Flight Lessons</h1>
     <p>Learn to fly with a certified instructor</p>
+  </section>
+
+  <!-- Schedule Section -->
+  <section id="schedule" class="section alt-bg">
+    <div class="container">
+      <h2>Schedule a Lesson</h2>
+      <p>Submit your details below and we will confirm your requested lesson time by email.</p>
+
+      <!-- Calendar Navigation -->
+      <div class="calendar-nav">
+        <button type="button" class="nav-btn" id="prevWeek">&larr; Previous Week</button>
+        <span class="current-week" id="currentWeek"></span>
+        <button type="button" class="nav-btn" id="nextWeek">Next Week &rarr;</button>
+      </div>
+
+      <!-- Weekly Calendar -->
+      <div class="calendar-container">
+        <div class="calendar-header" id="calendarHeader"></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <!-- Selected Slot Display -->
+      <div id="selectedSlotDisplay" style="text-align: center; margin: 20px 0; display: none;">
+        <p>Selected: <strong id="selectedSlotText"></strong></p>
+      </div>
+
+      <form id="scheduleForm" class="form">
+        <input id="full_name" name="full_name" type="text" placeholder="Full Name" required />
+        <input id="email" name="email" type="email" placeholder="Your Email" required />
+        <input id="lesson_date" name="lesson_date" type="hidden" required />
+        <input id="time_slot" name="time_slot" type="hidden" required />
+
+        <input id="tail_number" name="tail_number" type="text" placeholder="Aircraft Tail Number" required />
+
+        <button type="submit" class="btn-submit">Request Lesson</button>
+      </form>
+
+      <p id="formStatus" class="form-status"></p>
+
+      <div class="unavailable-box">
+        <h4>Unavailable Times</h4>
+        <ul id="unavailableList">
+          <li>Placeholder July 4, all day</li>
+          <li>Placeholder Every Sunday</li>
+        </ul>
+      </div>
+    </div>
   </section>
 
   <!-- About Section -->
@@ -47,43 +94,6 @@
         <li>Placeholder Commercial Pilot License</li>
         <li>Placeholder Instrument Rating</li>
       </ul>
-    </div>
-  </section>
-
-  <!-- Schedule Section -->
-  <section id="schedule" class="section alt-bg">
-    <div class="container">
-      <h2>Schedule a Lesson</h2>
-      <p>Submit your details below and we will confirm your requested lesson time by email.</p>
-
-      <form id="scheduleForm" class="form">
-        <input id="full_name" name="full_name" type="text" placeholder="Full Name" required />
-        <input id="email" name="email" type="email" placeholder="Your Email" required />
-        <input id="lesson_date" name="lesson_date" type="date" required />
-
-        <select id="time_slot" name="time_slot" required>
-          <option value="" disabled selected>Select a Time Slot</option>
-          <option value="8:00 AM - 10:00 AM">8:00 AM - 10:00 AM</option>
-          <option value="10:00 AM - 12:00 PM">10:00 AM - 12:00 PM</option>
-          <option value="12:00 PM - 2:00 PM">12:00 PM - 2:00 PM</option>
-          <option value="2:00 PM - 4:00 PM">2:00 PM - 4:00 PM</option>
-          <option value="4:00 PM - 6:00 PM">4:00 PM - 6:00 PM</option>
-        </select>
-
-        <input id="tail_number" name="tail_number" type="text" placeholder="Aircraft Tail Number" required />
-
-        <button type="submit" class="btn-submit">Request Lesson</button>
-      </form>
-
-      <p id="formStatus" class="form-status"></p>
-
-      <div class="unavailable-box">
-        <h4>Unavailable Times</h4>
-        <ul id="unavailableList">
-          <li>Placeholder July 4, all day</li>
-          <li>Placeholder Every Sunday</li>
-        </ul>
-      </div>
     </div>
   </section>
 
