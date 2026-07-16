@@ -6,6 +6,13 @@ let selectedEndIndex = null;
 let isResizing = false;
 let resizeDirection = null; // 'top' or 'bottom'
 
+// Mobile: which day column (Mon=0 … Sun=6) is currently shown
+// Default to today's column so the user lands on today
+let mobileSelectedDay = (() => {
+  const d = new Date().getDay(); // 0=Sun … 6=Sat
+  return d === 0 ? 0 : d - 1;   // convert to Mon-based; Sun → show Monday
+})();
+
 // Add entries here to block off specific days or times.
 // `day` uses Mon=0 ... Sun=6. `allDay: true` blocks the whole day.
 const unavailableTimes = [];
@@ -54,6 +61,9 @@ function renderCalendar() {
     dayEl.innerHTML = `${day}<br>${dateStr}`;
     headerContainer.appendChild(dayEl);
   });
+
+  // Mobile calendar (day-strip + time list)
+  renderMobileCalendar();
 
   // Create time slots grid
   const gridContainer = document.getElementById('calendarGrid');
@@ -293,22 +303,98 @@ function updateSelection() {
   displayEl.style.display = 'block';
 }
 
-// Clear selection
+// Clear selection (covers both desktop grid cells and mobile list items)
 function clearSelection() {
-  document.querySelectorAll('.time-slot.selected').forEach(el => {
+  document.querySelectorAll('.time-slot.selected, .time-list-item.selected').forEach(el => {
     el.classList.remove('selected');
   });
+}
+
+// Render mobile day-strip + time list
+function renderMobileCalendar() {
+  const dayStrip = document.getElementById('dayStrip');
+  const timeList = document.getElementById('timeList');
+  if (!dayStrip || !timeList) return;
+
+  const dayAbbrevs = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // Day strip
+  dayStrip.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(currentWeekStart);
+    d.setDate(d.getDate() + i);
+
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'day-chip' + (i === mobileSelectedDay ? ' active' : '');
+    chip.innerHTML =
+      `<span class="chip-day">${dayAbbrevs[i]}</span>` +
+      `<span class="chip-date">${d.getDate()}</span>`;
+
+    const idx = i;
+    chip.addEventListener('click', () => {
+      mobileSelectedDay = idx;
+      renderMobileCalendar();
+    });
+    dayStrip.appendChild(chip);
+  }
+
+  // Time list for the selected day
+  const dayObj = new Date(currentWeekStart);
+  dayObj.setDate(dayObj.getDate() + mobileSelectedDay);
+  const dateStr = formatDate(dayObj);
+  const dayOfWeek = dayObj.getDay();
+  const timeSlots = generateTimeSlots();
+
+  timeList.innerHTML = '';
+  for (let i = 0; i < timeSlots.length; i++) {
+    const timeSlot = timeSlots[i];
+    const endTime = i + 1 < timeSlots.length ? timeSlots[i + 1] : '6:00 PM';
+    const label = `${timeSlot} – ${endTime}`;
+
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.dataset.date = dateStr;
+    item.dataset.index = String(i);
+    item.dataset.time = timeSlot;
+    item.textContent = label;
+
+    if (isHardUnavailable(dayOfWeek, timeSlot, dayObj)) {
+      item.className = 'time-list-item unavailable';
+      item.disabled = true;
+    } else if (isPastSlot(timeSlot, dayObj)) {
+      item.className = 'time-list-item';
+      item.addEventListener('click', showPastSlotMessage);
+    } else {
+      item.className = 'time-list-item';
+      item.addEventListener('click', (e) => selectSingleSlot(e, item, dateStr, i));
+    }
+
+    timeList.appendChild(item);
+  }
+
+  // Re-apply selection highlight if the viewed day matches the current selection
+  if (selectedDate === dateStr && selectedStartIndex !== null) {
+    document.querySelectorAll(`[data-date="${dateStr}"].time-list-item`).forEach(el => {
+      const idx = parseInt(el.dataset.index);
+      if (idx >= selectedStartIndex && idx <= selectedEndIndex && !el.classList.contains('unavailable')) {
+        el.classList.add('selected');
+      }
+    });
+  }
 }
 
 // Setup calendar navigation
 function setupCalendarNavigation() {
   document.getElementById('prevWeek').addEventListener('click', () => {
     currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    mobileSelectedDay = 0;
     renderCalendar();
   });
 
   document.getElementById('nextWeek').addEventListener('click', () => {
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    mobileSelectedDay = 0;
     renderCalendar();
   });
 }
