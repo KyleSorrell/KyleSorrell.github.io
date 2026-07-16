@@ -5,10 +5,10 @@ let selectedStartIndex = null;
 let selectedEndIndex = null;
 let isResizing = false;
 let resizeDirection = null; // 'top' or 'bottom'
-const unavailableTimes = [
-  { day: 4, allDay: true }, // Friday (example)
-  { day: 0, times: ['8:00 AM', '8:30 AM'] } // Sunday mornings (example)
-];
+
+// Add entries here to block off specific days or times.
+// `day` uses Mon=0 ... Sun=6. `allDay: true` blocks the whole day.
+const unavailableTimes = [];
 
 // Initialize calendar on page load
 document.addEventListener('DOMContentLoaded', function () {
@@ -25,9 +25,12 @@ function getMonday(date) {
   return new Date(d.setDate(diff));
 }
 
-// Format date as YYYY-MM-DD
+// Format date as YYYY-MM-DD using local timezone
 function formatDate(date) {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 // Render the weekly calendar
@@ -42,10 +45,13 @@ function renderCalendar() {
   // Create header (days of week)
   const headerContainer = document.getElementById('calendarHeader');
   headerContainer.innerHTML = '<div></div>'; // Empty corner cell
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  days.forEach(day => {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  days.forEach((day, i) => {
+    const d = new Date(currentWeekStart);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const dayEl = document.createElement('div');
-    dayEl.textContent = day;
+    dayEl.innerHTML = `${day}<br>${dateStr}`;
     headerContainer.appendChild(dayEl);
   });
 
@@ -77,7 +83,7 @@ function renderCalendar() {
       slot.dataset.index = getTimeSlotIndex(timeSlot);
 
       // Check if slot is available
-      if (isSlotAvailable(dayOfWeek, timeSlot)) {
+      if (isSlotAvailable(dayOfWeek, timeSlot, slotDate)) {
         slot.classList.add('available');
         slot.addEventListener('click', (e) => selectSingleSlot(e, slot, dateStr, getTimeSlotIndex(timeSlot)));
         slot.addEventListener('mousemove', (e) => updateResizeCursor(e, slot));
@@ -115,18 +121,36 @@ function formatTime(hour, minutes) {
 }
 
 // Check if a time slot is available
-function isSlotAvailable(dayOfWeek, timeSlot) {
-  // Convert dayOfWeek from 0-6 (Sun-Sat) to 0-6 (Mon-Sun)
-  const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+function isSlotAvailable(dayOfWeek, timeSlot, slotDate) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const slotDay = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate());
 
-  for (const unavailable of unavailableTimes) {
-    if (unavailable.allDay && unavailable.day === adjustedDay) {
-      return false;
-    }
-    if (unavailable.times && unavailable.day === adjustedDay && unavailable.times.includes(timeSlot)) {
-      return false;
-    }
+  // Past dates
+  if (slotDay < today) return false;
+
+  // Sundays
+  if (dayOfWeek === 0) return false;
+
+  // July 4th
+  if (slotDate.getMonth() === 6 && slotDate.getDate() === 4) return false;
+
+  // Past time slots on today
+  if (slotDay.getTime() === today.getTime()) {
+    const [time, period] = timeSlot.split(' ');
+    let hour = parseInt(time.split(':')[0], 10);
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    if (hour <= now.getHours()) return false;
   }
+
+  // Custom unavailable times (day uses Mon=0 ... Sun=6)
+  const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  for (const unavailable of unavailableTimes) {
+    if (unavailable.allDay && unavailable.day === adjustedDay) return false;
+    if (unavailable.times && unavailable.day === adjustedDay && unavailable.times.includes(timeSlot)) return false;
+  }
+
   return true;
 }
 
@@ -243,14 +267,17 @@ function updateSelection() {
 
   // Update form
   const startTime = timeSlots[selectedStartIndex];
-  const endTime = timeSlots[selectedEndIndex + 1];
+  const endTime = selectedEndIndex + 1 < timeSlots.length
+    ? timeSlots[selectedEndIndex + 1]
+    : '6:00 PM';
 
   document.getElementById('lesson_date').value = selectedDate;
   document.getElementById('time_slot').value = `${startTime} - ${endTime}`;
 
-  // Show selected slot display
+  // Show selected slot display (parse as local date to avoid timezone offset)
   const displayEl = document.getElementById('selectedSlotDisplay');
-  const dateObj = new Date(selectedDate);
+  const [y, m, d] = selectedDate.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
   const dateFormatted = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   document.getElementById('selectedSlotText').textContent = `${dateFormatted} from ${startTime} to ${endTime}`;
   displayEl.style.display = 'block';
@@ -300,7 +327,7 @@ function setupFormSubmission() {
 
       // Call Cloud Function to submit lesson request
       const response = await fetch(
-        'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net/submitLessonRequest',
+        'https://submitlessonrequest-6lssb37doq-uc.a.run.app',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
