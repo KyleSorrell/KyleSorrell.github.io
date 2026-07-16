@@ -82,16 +82,19 @@ function renderCalendar() {
       slot.dataset.time = timeSlot;
       slot.dataset.index = getTimeSlotIndex(timeSlot);
 
-      // Check if slot is available
-      if (isSlotAvailable(dayOfWeek, timeSlot, slotDate)) {
+      if (isHardUnavailable(dayOfWeek, timeSlot, slotDate)) {
+        slot.classList.add('unavailable');
+        slot.disabled = true;
+      } else if (isPastSlot(timeSlot, slotDate)) {
+        // Past slots look available but clicking notifies the client
+        slot.classList.add('available');
+        slot.addEventListener('click', () => showPastSlotMessage());
+      } else {
         slot.classList.add('available');
         slot.addEventListener('click', (e) => selectSingleSlot(e, slot, dateStr, getTimeSlotIndex(timeSlot)));
         slot.addEventListener('mousemove', (e) => updateResizeCursor(e, slot));
         slot.addEventListener('mouseleave', () => resetCursor());
         slot.addEventListener('mousedown', (e) => handleResizeStart(e, slot, dateStr));
-      } else {
-        slot.classList.add('unavailable');
-        slot.disabled = true;
       }
 
       gridContainer.appendChild(slot);
@@ -120,38 +123,45 @@ function formatTime(hour, minutes) {
   return `${displayHour}:${displayMinutes} ${period}`;
 }
 
-// Check if a time slot is available
-function isSlotAvailable(dayOfWeek, timeSlot, slotDate) {
+// Returns true if this slot is blocked for a non-time reason (Sunday, holiday, custom)
+// These slots are greyed out and unclickable.
+function isHardUnavailable(dayOfWeek, timeSlot, slotDate) {
+  if (dayOfWeek === 0) return true; // Sundays
+  if (slotDate.getMonth() === 6 && slotDate.getDate() === 4) return true; // July 4th
+
+  const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  for (const unavailable of unavailableTimes) {
+    if (unavailable.allDay && unavailable.day === adjustedDay) return true;
+    if (unavailable.times && unavailable.day === adjustedDay && unavailable.times.includes(timeSlot)) return true;
+  }
+  return false;
+}
+
+// Returns true if this slot is in the past (shown normally but clicking shows a message)
+function isPastSlot(timeSlot, slotDate) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const slotDay = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate());
 
-  // Past dates
-  if (slotDay < today) return false;
+  if (slotDay < today) return true;
 
-  // Sundays
-  if (dayOfWeek === 0) return false;
-
-  // July 4th
-  if (slotDate.getMonth() === 6 && slotDate.getDate() === 4) return false;
-
-  // Past time slots on today
   if (slotDay.getTime() === today.getTime()) {
     const [time, period] = timeSlot.split(' ');
     let hour = parseInt(time.split(':')[0], 10);
     if (period === 'PM' && hour !== 12) hour += 12;
     if (period === 'AM' && hour === 12) hour = 0;
-    if (hour <= now.getHours()) return false;
+    if (hour <= now.getHours()) return true;
   }
 
-  // Custom unavailable times (day uses Mon=0 ... Sun=6)
-  const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  for (const unavailable of unavailableTimes) {
-    if (unavailable.allDay && unavailable.day === adjustedDay) return false;
-    if (unavailable.times && unavailable.day === adjustedDay && unavailable.times.includes(timeSlot)) return false;
-  }
+  return false;
+}
 
-  return true;
+// Show a message when a past slot is clicked
+function showPastSlotMessage() {
+  const display = document.getElementById('selectedSlotDisplay');
+  const text = document.getElementById('selectedSlotText');
+  text.textContent = 'That time has already passed — please select an upcoming slot.';
+  display.style.display = 'block';
 }
 
 // Get index of a time slot
@@ -308,12 +318,13 @@ function setupFormSubmission() {
   document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    const statusEl = document.getElementById('formStatus');
+
     if (!document.getElementById('lesson_date').value || !document.getElementById('time_slot').value) {
-      alert('Please select a date and time slot.');
+      statusEl.style.color = 'red';
+      statusEl.textContent = 'Please select a time slot from the calendar before submitting.';
       return;
     }
-
-    const statusEl = document.getElementById('formStatus');
     statusEl.textContent = 'Sending request...';
 
     try {
