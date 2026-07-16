@@ -207,6 +207,8 @@
           : "Unfortunately, this time slot is no longer available. Please visit the website to book another time.";
 
         await emailjs.send("service_qjt49i4", "template_c1jb6qq", {
+          name: result.student.full_name,
+          time: `${result.student.lesson_date} at ${result.student.time_slot}`,
           full_name: result.student.full_name,
           email: result.student.email,
           lesson_date: result.student.lesson_date,

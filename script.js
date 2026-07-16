@@ -344,6 +344,8 @@ function setupFormSubmission() {
       // Send email to Jake via EmailJS (client-side — avoids server-side restrictions)
       const base = 'https://kylesorrell.github.io';
       await emailjs.send('service_qjt49i4', 'template_sjocyhw', {
+        name: formData.full_name,
+        time: `${formData.lesson_date} at ${formData.time_slot}`,
         full_name: formData.full_name,
         email: formData.email,
         lesson_date: formData.lesson_date,
