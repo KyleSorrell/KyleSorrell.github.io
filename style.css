@@ -428,6 +428,40 @@ footer {
   background-color: #469fd4;
 }
 
+.duration-picker {
+  margin-top: 16px;
+}
+
+.duration-label {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.duration-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.duration-btn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-family: inherit;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.duration-btn.active {
+  background-color: #469fd4;
+  border-color: #469fd4;
+  color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .nav-links {
