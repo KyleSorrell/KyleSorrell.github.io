@@ -339,6 +339,20 @@ function setupFormSubmission() {
         throw new Error('Failed to submit request');
       }
 
+      const { requestId } = await response.json();
+
+      // Send email to Jake via EmailJS (client-side — avoids server-side restrictions)
+      const base = 'https://kylesorrell.github.io';
+      await emailjs.send('service_qjt49i4', 'template_sjocyhw', {
+        full_name: formData.full_name,
+        email: formData.email,
+        lesson_date: formData.lesson_date,
+        time_slot: formData.time_slot,
+        tail_number: formData.tail_number,
+        confirmation_link: `${base}/confirm.html?id=${requestId}&action=confirm`,
+        deny_link: `${base}/confirm.html?id=${requestId}&action=deny`,
+      });
+
       statusEl.textContent = 'Request sent! Jake will confirm by email shortly.';
       document.getElementById('scheduleForm').reset();
       document.getElementById('selectedSlotDisplay').style.display = 'none';

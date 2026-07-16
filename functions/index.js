@@ -22,11 +22,6 @@ function setCors(req, res) {
   res.set("Access-Control-Allow-Headers", "Content-Type");
 }
 
-const EMAILJS_SERVICE_ID = "service_qjt49i4";
-const EMAILJS_LESSON_REQUEST_TEMPLATE = "template_sjocyhw";
-const EMAILJS_LESSON_RESULT_TEMPLATE = "template_c1jb6qq";
-const EMAILJS_PUBLIC_KEY = "IA_nnwX8_TyVgF09H";
-
 // Fetch a lesson request by ID (used by confirm.html)
 exports.getLessonRequest = onRequest(async (req, res) => {
   setCors(req, res);
@@ -84,37 +79,7 @@ exports.submitLessonRequest = onRequest(async (req, res) => {
       created_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Send email to Jake with confirmation/denial links
-    const base = process.env.WEBSITE_URL || "https://kylesorrell.github.io";
-    const confirmLink = `${base}/confirm.html?id=${requestId}&action=confirm`;
-    const denyLink = `${base}/confirm.html?id=${requestId}&action=deny`;
-
-    const emailData = {
-      service_id: EMAILJS_SERVICE_ID,
-      template_id: EMAILJS_LESSON_REQUEST_TEMPLATE,
-      user_id: EMAILJS_PUBLIC_KEY,
-      template_params: {
-        full_name,
-        email,
-        lesson_date,
-        time_slot,
-        tail_number,
-        confirmation_link: confirmLink,
-        deny_link: denyLink,
-      },
-    };
-
-    const fetch = require("node-fetch");
-    const emailResponse = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(emailData),
-    });
-
-    if (!emailResponse.ok) {
-      throw new Error(`EmailJS error: ${emailResponse.statusText}`);
-    }
-
+    // Email is sent client-side via EmailJS after this response
     logger.info(`Lesson request submitted: ${requestId}`);
     res.json({success: true, requestId});
   } catch (error) {
@@ -158,38 +123,19 @@ exports.processLessonDecision = onRequest(async (req, res) => {
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Send result email to client
-    const resultMessage = action === "confirm"
-      ? "Your flight lesson has been confirmed! See you soon!"
-      : "Unfortunately, this time slot is no longer available. Please visit the website to book another time.";
-
-    const emailData = {
-      service_id: EMAILJS_SERVICE_ID,
-      template_id: EMAILJS_LESSON_RESULT_TEMPLATE,
-      user_id: EMAILJS_PUBLIC_KEY,
-      template_params: {
+    // Return student data so the browser can send the result email via EmailJS
+    logger.info(`Lesson request ${action}ed: ${requestId}`);
+    res.json({
+      success: true,
+      action,
+      student: {
         full_name: data.full_name,
         email: data.email,
         lesson_date: data.lesson_date,
         time_slot: data.time_slot,
         tail_number: data.tail_number,
-        result_message: resultMessage,
       },
-    };
-
-    const fetch = require("node-fetch");
-    const emailResponse = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(emailData),
     });
-
-    if (!emailResponse.ok) {
-      throw new Error(`EmailJS error: ${emailResponse.statusText}`);
-    }
-
-    logger.info(`Lesson request ${action}ed: ${requestId}`);
-    res.json({success: true, action});
   } catch (error) {
     logger.error("Error processing lesson decision:", error);
     res.status(500).json({error: "Error processing decision"});

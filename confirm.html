@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lesson Request - Jake Sorrell Flight Lessons</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>(function(){ emailjs.init("IA_nnwX8_TyVgF09H"); })();</script>
   <style>
     .confirm-container {
       max-width: 600px;
@@ -196,6 +198,22 @@
         if (!response.ok) {
           throw new Error("Failed to process decision");
         }
+
+        const result = await response.json();
+
+        // Send result email to student via EmailJS (client-side)
+        const resultMessage = decision === "confirm"
+          ? "Your flight lesson has been confirmed! See you soon."
+          : "Unfortunately, this time slot is no longer available. Please visit the website to book another time.";
+
+        await emailjs.send("service_qjt49i4", "template_c1jb6qq", {
+          full_name: result.student.full_name,
+          email: result.student.email,
+          lesson_date: result.student.lesson_date,
+          time_slot: result.student.time_slot,
+          tail_number: result.student.tail_number,
+          result_message: resultMessage,
+        });
 
         resultDiv.textContent =
           decision === "confirm"
