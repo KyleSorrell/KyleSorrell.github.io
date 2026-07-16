@@ -327,7 +327,7 @@ function setupFormSubmission() {
 
       // Call Cloud Function to submit lesson request
       const response = await fetch(
-        'https://submitlessonrequest-6lssb37doq-uc.a.run.app',
+        'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net/submitLessonRequest',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
