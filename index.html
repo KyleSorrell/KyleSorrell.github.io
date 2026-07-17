@@ -40,9 +40,9 @@
 
       <!-- Calendar Navigation -->
       <div class="calendar-nav">
-        <button type="button" class="nav-btn" id="prevWeek">&larr; Previous Week</button>
+        <button type="button" class="nav-btn" id="prevWeek">&larr; Previous</button>
         <span class="current-week" id="currentWeek"></span>
-        <button type="button" class="nav-btn" id="nextWeek">Next Week &rarr;</button>
+        <button type="button" class="nav-btn" id="nextWeek">Next &rarr;</button>
       </div>
 
       <!-- Weekly Calendar (desktop) -->
@@ -51,11 +51,16 @@
         <div class="calendar-grid" id="calendarGrid"></div>
       </div>
 
-      <!-- Day-strip + time list (mobile) -->
+      <!-- Day-strip + wheel picker (mobile) -->
       <div class="mobile-calendar">
         <div class="day-strip" id="dayStrip"></div>
-        <div class="time-list" id="timeList"></div>
-        <div class="duration-picker" id="durationPicker" style="display:none;">
+        <div class="wheel-wrapper">
+          <div class="wheel-fade-top"></div>
+          <div class="wheel-fade-bottom"></div>
+          <div class="wheel-highlight"></div>
+          <div class="wheel" id="timeWheel"></div>
+        </div>
+        <div class="duration-picker" id="durationPicker">
           <p class="duration-label">Duration:</p>
           <div class="duration-options" id="durationOptions"></div>
         </div>

@@ -315,23 +315,49 @@ function updateSelection() {
   displayEl.style.display = 'block';
 }
 
-// Clear selection (covers both desktop grid cells and mobile list items)
+// Clear selection (desktop grid cells only; mobile wheel manages its own state)
 function clearSelection() {
-  document.querySelectorAll('.time-slot.selected, .time-list-item.selected').forEach(el => {
-    el.classList.remove('selected');
-  });
+  document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
 }
 
-// Render mobile day-strip + time list (1-hour slots)
+// ── Mobile wheel helpers ──────────────────────────────────────────────────────
+
+const WHEEL_ITEM_HEIGHT = 36;
+let wheelScrollHandler = null;
+let wheelScrollTimer = null;
+
+function getMobileDayObj() {
+  const d = new Date(currentWeekStart);
+  d.setDate(d.getDate() + mobileSelectedDay);
+  return d;
+}
+
+function findFirstAvailable(allSlots, dayObj, dayOfWeek) {
+  for (let i = 0; i < allSlots.length; i++) {
+    if (!isHardUnavailable(dayOfWeek, allSlots[i], dayObj) && !isPastSlot(allSlots[i], dayObj)) return i;
+  }
+  return -1;
+}
+
+function findNearestAvailable(idx, allSlots, dayObj, dayOfWeek) {
+  for (let offset = 1; offset < allSlots.length; offset++) {
+    const after = idx + offset;
+    const before = idx - offset;
+    if (after < allSlots.length && !isHardUnavailable(dayOfWeek, allSlots[after], dayObj) && !isPastSlot(allSlots[after], dayObj)) return after;
+    if (before >= 0 && !isHardUnavailable(dayOfWeek, allSlots[before], dayObj) && !isPastSlot(allSlots[before], dayObj)) return before;
+  }
+  return -1;
+}
+
+// ── Mobile calendar render ────────────────────────────────────────────────────
+
 function renderMobileCalendar() {
   const dayStrip = document.getElementById('dayStrip');
-  const timeList = document.getElementById('timeList');
-  if (!dayStrip || !timeList) return;
-
-  const dayAbbrevs = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const allSlots = generateTimeSlots(); // 30-min grid
+  const wheel = document.getElementById('timeWheel');
+  if (!dayStrip || !wheel) return;
 
   // Day strip
+  const dayAbbrevs = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   dayStrip.innerHTML = '';
   for (let i = 0; i < 7; i++) {
     const d = new Date(currentWeekStart);
@@ -342,61 +368,72 @@ function renderMobileCalendar() {
     chip.innerHTML =
       `<span class="chip-day">${dayAbbrevs[i]}</span>` +
       `<span class="chip-date">${d.getDate()}</span>`;
-    const idx = i;
+    const capturedIdx = i;
     chip.addEventListener('click', () => {
-      mobileSelectedDay = idx;
+      mobileSelectedDay = capturedIdx;
       mobilePendingStartIndex = null;
-      document.getElementById('durationPicker').style.display = 'none';
       renderMobileCalendar();
     });
     dayStrip.appendChild(chip);
   }
 
-  // Time list — one row per hour (every other 30-min slot)
-  const dayObj = new Date(currentWeekStart);
-  dayObj.setDate(dayObj.getDate() + mobileSelectedDay);
+  // Wheel
+  const dayObj = getMobileDayObj();
   const dateStr = formatDate(dayObj);
   const dayOfWeek = dayObj.getDay();
+  const allSlots = generateTimeSlots();
 
-  timeList.innerHTML = '';
-  for (let i = 0; i < allSlots.length; i += 2) { // step by 2 = 1-hour increments
-    const timeSlot = allSlots[i]; // e.g. "8:00 AM"
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.dataset.date = dateStr;
-    item.dataset.index = String(i);
+  wheel.innerHTML = '';
+  allSlots.forEach((timeSlot, i) => {
+    const item = document.createElement('div');
+    item.className = 'wheel-item';
     item.textContent = timeSlot;
-
-    if (isHardUnavailable(dayOfWeek, timeSlot, dayObj)) {
-      item.className = 'time-list-item unavailable';
-      item.disabled = true;
-    } else if (isPastSlot(timeSlot, dayObj)) {
-      item.className = 'time-list-item';
-      item.addEventListener('click', showPastSlotMessage);
-    } else {
-      const isSelected = selectedDate === dateStr && mobilePendingStartIndex === i;
-      item.className = 'time-list-item' + (isSelected ? ' selected' : '');
-      item.addEventListener('click', () => selectMobileSlot(i, dateStr, item));
+    if (isHardUnavailable(dayOfWeek, timeSlot, dayObj) || isPastSlot(timeSlot, dayObj)) {
+      item.classList.add('unavailable');
     }
+    wheel.appendChild(item);
+  });
 
-    timeList.appendChild(item);
-  }
-}
+  // Pick initial scroll index
+  let startIdx = (selectedDate === dateStr && mobilePendingStartIndex !== null)
+    ? mobilePendingStartIndex
+    : findFirstAvailable(allSlots, dayObj, dayOfWeek);
+  if (startIdx === -1) startIdx = 0;
 
-// Called when a mobile time row is tapped
-function selectMobileSlot(startIndex, dateStr, item) {
-  mobilePendingStartIndex = startIndex;
-  selectedDate = dateStr;
+  // Set position after browser lays out the new items
+  setTimeout(() => {
+    wheel.scrollTop = startIdx * WHEEL_ITEM_HEIGHT;
+    if (!wheel.children[startIdx].classList.contains('unavailable')) {
+      mobilePendingStartIndex = startIdx;
+      selectedDate = dateStr;
+      applyMobileDuration();
+    }
+    renderDurationPicker();
+  }, 0);
 
-  // Highlight only the tapped row
-  document.querySelectorAll('.time-list-item.selected').forEach(el => el.classList.remove('selected'));
-  item.classList.add('selected');
+  // Scroll listener — debounced, auto-skips unavailable items
+  if (wheelScrollHandler) wheel.removeEventListener('scroll', wheelScrollHandler);
+  wheelScrollHandler = () => {
+    clearTimeout(wheelScrollTimer);
+    wheelScrollTimer = setTimeout(() => {
+      let idx = Math.round(wheel.scrollTop / WHEEL_ITEM_HEIGHT);
+      idx = Math.max(0, Math.min(idx, allSlots.length - 1));
 
-  // Clear any desktop selection
-  document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
+      if (wheel.children[idx] && wheel.children[idx].classList.contains('unavailable')) {
+        const nearest = findNearestAvailable(idx, allSlots, dayObj, dayOfWeek);
+        if (nearest >= 0) {
+          wheel.scrollTo({ top: nearest * WHEEL_ITEM_HEIGHT, behavior: 'smooth' });
+        }
+        return; // selection update happens after the smooth scroll settles
+      }
 
-  applyMobileDuration();
-  renderDurationPicker();
+      mobilePendingStartIndex = idx;
+      selectedDate = dateStr;
+      applyMobileDuration();
+      renderDurationPicker();
+    }, 150);
+  };
+  wheel.addEventListener('scroll', wheelScrollHandler);
 }
 
 // Apply the current start + duration to form fields and the display label
@@ -452,7 +489,6 @@ function setupCalendarNavigation() {
     currentWeekStart.setDate(currentWeekStart.getDate() - 7);
     mobileSelectedDay = 0;
     mobilePendingStartIndex = null;
-    document.getElementById('durationPicker').style.display = 'none';
     renderCalendar();
   });
 
@@ -460,7 +496,6 @@ function setupCalendarNavigation() {
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     mobileSelectedDay = 0;
     mobilePendingStartIndex = null;
-    document.getElementById('durationPicker').style.display = 'none';
     renderCalendar();
   });
 }
