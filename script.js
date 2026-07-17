@@ -189,7 +189,6 @@ function isTimeInRange(timeSlot, startStr, endStr) {
 // Returns true if this slot is blocked for a non-time reason (Sunday, holiday, custom)
 // These slots are greyed out and unclickable.
 function isHardUnavailable(dayOfWeek, timeSlot, slotDate) {
-  if (dayOfWeek === 0) return true; // Sundays
   if (slotDate.getMonth() === 6 && slotDate.getDate() === 4) return true; // July 4th
 
   const dateStr = formatDate(slotDate);
