@@ -8,16 +8,8 @@ setGlobalOptions({ maxInstances: 10 });
 admin.initializeApp();
 const db = admin.firestore();
 
-const ALLOWED_ORIGINS = [
-  "https://kylesorrell.github.io",
-  "http://localhost",
-  "http://127.0.0.1",
-];
-
 function setCors(req, res) {
-  const origin = req.headers.origin || "";
-  const isAllowed = ALLOWED_ORIGINS.some((o) => origin.startsWith(o));
-  res.set("Access-Control-Allow-Origin", isAllowed ? origin : ALLOWED_ORIGINS[0]);
+  res.set("Access-Control-Allow-Origin", "*");
   res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type");
 }
