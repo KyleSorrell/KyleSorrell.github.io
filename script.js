@@ -124,13 +124,20 @@ function renderCalendar() {
   });
 }
 
-// Generate 30-minute time slots from 8:00 AM to 6:00 PM
+// Generate 30-minute time slots from 8:00 AM to 6:00 PM (desktop grid)
 function generateTimeSlots() {
   const slots = [];
-  const startHour = 8;
-  const endHour = 18; // 6 PM
+  for (let hour = 8; hour < 18; hour++) {
+    slots.push(formatTime(hour, 0));
+    slots.push(formatTime(hour, 30));
+  }
+  return slots;
+}
 
-  for (let hour = startHour; hour < endHour; hour++) {
+// Generate 30-minute time slots across all 24 hours (mobile wheel)
+function generateMobileTimeSlots() {
+  const slots = [];
+  for (let hour = 0; hour < 24; hour++) {
     slots.push(formatTime(hour, 0));
     slots.push(formatTime(hour, 30));
   }
@@ -381,7 +388,7 @@ function renderMobileCalendar() {
   const dayObj = getMobileDayObj();
   const dateStr = formatDate(dayObj);
   const dayOfWeek = dayObj.getDay();
-  const allSlots = generateTimeSlots();
+  const allSlots = generateMobileTimeSlots();
 
   wheel.innerHTML = '';
   allSlots.forEach((timeSlot, i) => {
@@ -439,11 +446,9 @@ function renderMobileCalendar() {
 // Apply the current start + duration to form fields and the display label
 function applyMobileDuration() {
   if (mobilePendingStartIndex === null) return;
-  const allSlots = generateTimeSlots();
-  const maxSlots = allSlots.length - mobilePendingStartIndex;
-  const clampedDuration = Math.min(mobileDurationSlots, maxSlots);
-  const endIndex = mobilePendingStartIndex + clampedDuration - 1;
-  const endTime = endIndex + 1 < allSlots.length ? allSlots[endIndex + 1] : '6:00 PM';
+  const allSlots = generateMobileTimeSlots();
+  const endIndex = Math.min(mobilePendingStartIndex + mobileDurationSlots - 1, allSlots.length - 1);
+  const endTime = endIndex + 1 < allSlots.length ? allSlots[endIndex + 1] : '12:00 AM';
   const startTime = allSlots[mobilePendingStartIndex];
 
   selectedStartIndex = mobilePendingStartIndex;
@@ -465,11 +470,8 @@ function renderDurationPicker() {
   const container = document.getElementById('durationOptions');
   picker.style.display = 'block';
 
-  const allSlots = generateTimeSlots();
-  const maxSlots = allSlots.length - mobilePendingStartIndex;
-
   container.innerHTML = '';
-  DURATION_OPTIONS.filter(opt => opt.slots <= maxSlots).forEach(opt => {
+  DURATION_OPTIONS.forEach(opt => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = opt.label;

@@ -167,7 +167,7 @@ a:hover {
 
 .current-week {
   font-weight: bold;
-  font-size: 1.4em;
+  font-size: 1.2em;
   min-width: 180px;
   text-align: center;
 }
@@ -303,7 +303,7 @@ a:hover {
 
 /* Selected slot display */
 #selectedSlotDisplay {
-  font-size: 1em;
+  font-size: 0.9em;
 }
 
 /* Unavailable Times */
