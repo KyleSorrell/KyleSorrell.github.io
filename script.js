@@ -25,15 +25,34 @@ const DURATION_OPTIONS = [
   { label: '3 hr',   slots: 6 },
 ];
 
-// Add entries here to block off specific days or times.
-// `day` uses Mon=0 ... Sun=6. `allDay: true` blocks the whole day.
+// Hardcoded custom blocks (legacy — prefer admin page instead)
 const unavailableTimes = [];
+
+// Dynamically loaded from server
+let confirmedSlots = [];      // confirmed lessons → their time blocks are unavailable
+let customBlocks = [];        // admin-added blocks (date or recurring)
+
+const GET_UNAVAILABLE_URL =
+  'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net/getUnavailableTimes';
+
+// Fetch dynamic unavailability then re-render so the calendar reflects it
+async function loadDynamicUnavailability() {
+  try {
+    const res = await fetch(GET_UNAVAILABLE_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    confirmedSlots = data.confirmed || [];
+    customBlocks   = data.custom   || [];
+    renderCalendar();
+  } catch (_) { /* fail silently — calendar still works without server data */ }
+}
 
 // Initialize calendar on page load
 document.addEventListener('DOMContentLoaded', function () {
   renderCalendar();
   setupCalendarNavigation();
   setupFormSubmission();
+  loadDynamicUnavailability();
 });
 
 // Get the Monday of the current week
@@ -152,17 +171,50 @@ function formatTime(hour, minutes) {
   return `${displayHour}:${displayMinutes} ${period}`;
 }
 
+// Convert a "H:MM AM/PM" string to total minutes from midnight
+function timeToMins(t) {
+  const [time, period] = t.trim().split(' ');
+  let [h, m] = time.split(':').map(Number);
+  if (period === 'PM' && h !== 12) h += 12;
+  if (period === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+// True if timeSlot falls within [startStr, endStr)
+function isTimeInRange(timeSlot, startStr, endStr) {
+  const s = timeToMins(timeSlot);
+  return s >= timeToMins(startStr) && s < timeToMins(endStr);
+}
+
 // Returns true if this slot is blocked for a non-time reason (Sunday, holiday, custom)
 // These slots are greyed out and unclickable.
 function isHardUnavailable(dayOfWeek, timeSlot, slotDate) {
   if (dayOfWeek === 0) return true; // Sundays
   if (slotDate.getMonth() === 6 && slotDate.getDate() === 4) return true; // July 4th
 
+  const dateStr = formatDate(slotDate);
+
+  // Admin-added custom blocks
+  for (const block of customBlocks) {
+    if (block.type === 'date' && block.date === dateStr) return true;
+    if (block.type === 'recurring' && block.dayOfWeek === dayOfWeek) return true;
+  }
+
+  // Confirmed lessons
+  for (const lesson of confirmedSlots) {
+    if (lesson.date === dateStr) {
+      const parts = lesson.time_slot.split(' - ');
+      if (parts.length === 2 && isTimeInRange(timeSlot, parts[0], parts[1])) return true;
+    }
+  }
+
+  // Legacy hardcoded blocks
   const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   for (const unavailable of unavailableTimes) {
     if (unavailable.allDay && unavailable.day === adjustedDay) return true;
     if (unavailable.times && unavailable.day === adjustedDay && unavailable.times.includes(timeSlot)) return true;
   }
+
   return false;
 }
 

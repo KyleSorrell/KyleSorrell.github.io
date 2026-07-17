@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Jake's Flight Lessons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .admin-wrap {
+      max-width: 700px;
+      margin: 100px auto 60px;
+      padding: 0 20px;
+    }
+    .admin-wrap h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    .admin-wrap h2 { font-size: 1.3rem; margin: 30px 0 12px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+
+    #loginSection { text-align: center; }
+    #loginSection input {
+      padding: 10px 14px;
+      border: 1px solid #999;
+      border-radius: 4px;
+      font-size: 1em;
+      font-family: inherit;
+      margin-right: 8px;
+      width: 220px;
+    }
+
+    #loginError { color: red; margin-top: 10px; font-size: 0.9em; }
+    #dashboard { display: none; }
+
+    .add-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .add-form label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 3px; }
+    .add-form input, .add-form select {
+      padding: 8px 12px;
+      border: 1px solid #999;
+      border-radius: 4px;
+      font-size: 0.95em;
+      font-family: inherit;
+    }
+    .add-form .field { display: flex; flex-direction: column; }
+
+    .item-list { list-style: none; padding: 0; }
+    .item-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      background: #fff;
+      font-size: 0.95em;
+    }
+    .item-list li .meta { color: #666; font-size: 0.85em; }
+    .item-list .empty { color: #999; font-style: italic; padding: 10px 0; }
+
+    .btn-del {
+      background: none;
+      border: 1px solid #c00;
+      color: #c00;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 0.85em;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+    .btn-del:hover { background: #ffeaea; }
+
+    .status-msg { font-size: 0.9em; font-weight: bold; margin-top: 8px; }
+    .status-msg.ok  { color: green; }
+    .status-msg.err { color: red; }
+
+    #typeToggle { display: flex; gap: 12px; align-items: center; }
+    #dateFields, #recurringFields { display: none; }
+    #dateFields.visible, #recurringFields.visible { display: contents; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">Jake Sorrell</a>
+    </div>
+  </nav>
+
+  <div class="admin-wrap">
+    <h1>Admin Dashboard</h1>
+
+    <!-- PIN gate -->
+    <div id="loginSection">
+      <p style="margin-bottom:16px;color:#555;">Enter PIN to continue.</p>
+      <input type="password" id="passwordInput" placeholder="PIN" style="width:120px;letter-spacing:0.2em;" maxlength="10" />
+      <button class="btn-submit" style="width:auto;padding:10px 20px;" onclick="login()">Enter</button>
+      <p id="loginError" style="color:red;margin-top:10px;font-size:0.9em;"></p>
+    </div>
+
+    <!-- Dashboard (shown after login) -->
+    <div id="dashboard">
+
+      <!-- Add unavailable time -->
+      <h2>Add Unavailable Time</h2>
+      <div class="add-form">
+        <div class="field">
+          <label>Type</label>
+          <select id="blockType" onchange="onTypeChange()">
+            <option value="date">Specific Date</option>
+            <option value="recurring">Recurring Day</option>
+          </select>
+        </div>
+        <div id="dateFields" class="visible" style="display:contents;">
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="blockDate" />
+          </div>
+        </div>
+        <div id="recurringFields" style="display:none;contents;">
+          <div class="field">
+            <label>Day of Week</label>
+            <select id="blockDay">
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Reason (optional)</label>
+          <input type="text" id="blockReason" placeholder="e.g. Holiday" style="width:160px;" />
+        </div>
+        <button class="btn-submit" style="width:auto;padding:9px 18px;" onclick="addBlock()">Add</button>
+      </div>
+      <p id="addStatus" class="status-msg"></p>
+
+      <!-- Custom blocks list -->
+      <h2>Custom Unavailable Times</h2>
+      <ul class="item-list" id="blockList"><li class="empty">Loading…</li></ul>
+
+      <!-- Confirmed lessons -->
+      <h2>Confirmed Lessons (Auto-blocked)</h2>
+      <ul class="item-list" id="confirmedList"><li class="empty">Loading…</li></ul>
+
+    </div>
+  </div>
+
+  <script>
+    const BASE = 'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net';
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    const ADMIN_PIN = '2007';
+    let adminPassword = ADMIN_PIN; // sent with every API call
+
+    function login() {
+      const entered = document.getElementById('passwordInput').value.trim();
+      if (entered !== ADMIN_PIN) {
+        document.getElementById('loginError').textContent = 'Incorrect PIN.';
+        return;
+      }
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadData();
+    }
+
+    document.getElementById('passwordInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') login();
+    });
+
+    function onTypeChange() {
+      const type = document.getElementById('blockType').value;
+      document.getElementById('dateFields').style.display    = type === 'date'      ? 'contents' : 'none';
+      document.getElementById('recurringFields').style.display = type === 'recurring' ? 'contents' : 'none';
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(`${BASE}/getUnavailableTimes`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        renderBlockList(data.custom || []);
+        renderConfirmedList(data.confirmed || []);
+      } catch {
+        document.getElementById('loginError').textContent = 'Could not load data. Check your connection.';
+      }
+    }
+
+    function renderBlockList(blocks) {
+      const ul = document.getElementById('blockList');
+      if (!blocks.length) {
+        ul.innerHTML = '<li class="empty">No custom blocks added yet.</li>';
+        return;
+      }
+      ul.innerHTML = blocks.map(b => {
+        const label = b.type === 'date'
+          ? formatDisplayDate(b.date)
+          : `Every ${DAY_NAMES[b.dayOfWeek]}`;
+        const reason = b.reason ? ` — ${b.reason}` : '';
+        return `<li>
+          <span>${label}<span class="meta">${reason}</span></span>
+          <button class="btn-del" onclick="deleteBlock('${b.id}')">Delete</button>
+        </li>`;
+      }).join('');
+    }
+
+    function renderConfirmedList(confirmed) {
+      const ul = document.getElementById('confirmedList');
+      if (!confirmed.length) {
+        ul.innerHTML = '<li class="empty">No confirmed lessons yet.</li>';
+        return;
+      }
+      ul.innerHTML = confirmed.map(c =>
+        `<li>
+          <span>
+            <strong>${c.full_name}</strong>
+            <span class="meta"> &nbsp;${formatDisplayDate(c.date)} &nbsp;${c.time_slot} &nbsp;(${c.tail_number})</span>
+          </span>
+        </li>`
+      ).join('');
+    }
+
+    async function addBlock() {
+      const type   = document.getElementById('blockType').value;
+      const reason = document.getElementById('blockReason').value.trim();
+      const status = document.getElementById('addStatus');
+      status.textContent = '';
+
+      const body = { adminPassword, type, reason };
+      if (type === 'date') {
+        const date = document.getElementById('blockDate').value;
+        if (!date) { status.textContent = 'Please select a date.'; status.className = 'status-msg err'; return; }
+        body.date = date;
+      } else {
+        body.dayOfWeek = Number(document.getElementById('blockDay').value);
+      }
+
+      try {
+        const res = await fetch(`${BASE}/addUnavailableTime`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (res.status === 401) throw new Error('wrong password');
+        if (!res.ok) throw new Error('server error');
+
+        status.textContent = 'Added.';
+        status.className = 'status-msg ok';
+        document.getElementById('blockReason').value = '';
+        document.getElementById('blockDate').value = '';
+        loadData();
+      } catch (e) {
+        status.textContent = e.message === 'wrong password' ? 'Incorrect password.' : 'Error adding block.';
+        status.className = 'status-msg err';
+      }
+    }
+
+    async function deleteBlock(id) {
+      if (!confirm('Delete this unavailable time?')) return;
+      try {
+        const res = await fetch(`${BASE}/deleteUnavailableTime`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adminPassword, id }),
+        });
+        if (!res.ok) throw new Error();
+        loadData();
+      } catch {
+        alert('Error deleting. Please try again.');
+      }
+    }
+
+    function formatDisplayDate(dateStr) {
+      if (!dateStr) return '';
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+  </script>
+</body>
+</html>
