@@ -447,12 +447,16 @@ function renderMobileCalendar() {
 function applyMobileDuration() {
   if (mobilePendingStartIndex === null) return;
   const allSlots = generateMobileTimeSlots();
-  const endIndex = Math.min(mobilePendingStartIndex + mobileDurationSlots - 1, allSlots.length - 1);
-  const endTime = endIndex + 1 < allSlots.length ? allSlots[endIndex + 1] : '12:00 AM';
   const startTime = allSlots[mobilePendingStartIndex];
 
+  // Compute end time by adding duration in 30-min steps, wrapping past midnight
+  const endTotalMinutes = (mobilePendingStartIndex + mobileDurationSlots) * 30;
+  const endHour = Math.floor(endTotalMinutes / 60) % 24;
+  const endMins = endTotalMinutes % 60;
+  const endTime = formatTime(endHour, endMins);
+
   selectedStartIndex = mobilePendingStartIndex;
-  selectedEndIndex = endIndex;
+  selectedEndIndex = mobilePendingStartIndex + mobileDurationSlots - 1;
 
   document.getElementById('lesson_date').value = selectedDate;
   document.getElementById('time_slot').value = `${startTime} - ${endTime}`;
