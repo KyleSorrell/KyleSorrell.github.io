@@ -5,14 +5,14 @@
 }
 
 body {
-  font-family: Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif;
+  font-family: Carlito, Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif;
   font-size: 1.1em;
   color: #222;
   line-height: 1.8;
 }
 
 input, button, select, textarea {
-  font-family: Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif;
+  font-family: Carlito, Calibri, Candara, "Segoe UI", Optima, Arial, sans-serif;
 }
 
 a {
