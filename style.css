@@ -280,6 +280,7 @@ a:hover {
 
 .btn-submit {
   width: 100%;
+  min-width: 72px;
   padding: 10px;
   background-color: #469fd4;
   color: #fff;

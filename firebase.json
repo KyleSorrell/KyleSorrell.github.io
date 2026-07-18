@@ -1,4 +1,20 @@
 {
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      "firestore.indexes.json",
+      ".firebaserc",
+      "CNAME",
+      "functions/**",
+      ".git/**",
+      "**/node_modules/**",
+      "n/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false
+  },
   "firestore": {
     "database": "(default)",
     "location": "nam5",

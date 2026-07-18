@@ -391,6 +391,12 @@ function getMobileDayObj() {
 }
 
 function findFirstAvailable(allSlots, dayObj, dayOfWeek) {
+  // Prefer starting at 8:00 AM (index 16 in the 24-hr array) for a sensible default
+  const preferredStart = 16;
+  for (let i = preferredStart; i < allSlots.length; i++) {
+    if (!isHardUnavailable(dayOfWeek, allSlots[i], dayObj) && !isPastSlot(allSlots[i], dayObj)) return i;
+  }
+  // Fall back to any available slot if nothing from 8 AM onward is free
   for (let i = 0; i < allSlots.length; i++) {
     if (!isHardUnavailable(dayOfWeek, allSlots[i], dayObj) && !isPastSlot(allSlots[i], dayObj)) return i;
   }
@@ -626,7 +632,7 @@ function setupFormSubmission() {
 
         const { requestId } = await response.json();
 
-        const base = 'https://jakesorrell.com';
+        const base = 'https://sorrellaviation.com';
         await emailjs.send('service_qjt49i4', 'template_sjocyhw', {
           name: formData.full_name,
           time: `${formData.lesson_date} at ${formData.time_slot}`,
