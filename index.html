@@ -38,7 +38,7 @@
   <section id="schedule" class="section alt-bg">
     <div class="container">
       <h2>Schedule a Lesson</h2>
-      <p style="max-width:900px;margin:0 auto;">Submit your details below and we will confirm your requested lesson time by email.</p>
+      <p style="max-width:900px;margin:0 auto;;text-align:center;">Submit your details below and we will confirm your requested lesson time by email.</p>
 
       <!-- Calendar Navigation -->
       <div class="calendar-nav">
@@ -93,6 +93,25 @@
   <footer>
     <p>&copy; 2026 Sorrell Aviation &nbsp;|&nbsp; <a href="mailto:jbsor2007@gmail.com" style="color:#777;">jbsor2007@gmail.com</a></p>
   </footer>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+      <h3>Confirm Your Request</h3>
+      <p>Please review your details before submitting.</p>
+      <div class="modal-details">
+        <div class="modal-row"><span class="modal-label">Name</span><span id="mName"></span></div>
+        <div class="modal-row"><span class="modal-label">Email</span><span id="mEmail"></span></div>
+        <div class="modal-row"><span class="modal-label">Date</span><span id="mDate"></span></div>
+        <div class="modal-row"><span class="modal-label">Time</span><span id="mTime"></span></div>
+        <div class="modal-row"><span class="modal-label">Aircraft</span><span id="mTail"></span></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-submit modal-confirm" id="modalConfirmBtn">Submit Request</button>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

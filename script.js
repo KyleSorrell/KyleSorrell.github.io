@@ -557,9 +557,19 @@ function setupCalendarNavigation() {
   });
 }
 
+// Modal helpers
+function closeModal() {
+  document.getElementById('confirmModal').style.display = 'none';
+}
+
+// Close modal on backdrop click
+document.getElementById('confirmModal').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
+
 // Setup form submission
 function setupFormSubmission() {
-  document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
+  document.getElementById('scheduleForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
     const statusEl = document.getElementById('formStatus');
@@ -569,54 +579,76 @@ function setupFormSubmission() {
       statusEl.textContent = 'Please select a time slot from the calendar before submitting.';
       return;
     }
-    statusEl.textContent = 'Sending request...';
 
-    try {
-      const formData = {
-        full_name: document.getElementById('full_name').value,
-        email: document.getElementById('email').value,
-        lesson_date: document.getElementById('lesson_date').value,
-        time_slot: document.getElementById('time_slot').value,
-        tail_number: document.getElementById('tail_number').value,
-      };
+    // Populate and show confirmation modal
+    const [y, m, d] = document.getElementById('lesson_date').value.split('-').map(Number);
+    const dateFormatted = new Date(y, m - 1, d).toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+    });
 
-      // Call Cloud Function to submit lesson request
-      const response = await fetch(
-        'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net/submitLessonRequest',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        }
-      );
+    document.getElementById('mName').textContent  = document.getElementById('full_name').value;
+    document.getElementById('mEmail').textContent = document.getElementById('email').value;
+    document.getElementById('mDate').textContent  = dateFormatted;
+    document.getElementById('mTime').textContent  = document.getElementById('time_slot').value;
+    document.getElementById('mTail').textContent  = document.getElementById('tail_number').value;
 
-      if (!response.ok) {
-        throw new Error('Failed to submit request');
+    document.getElementById('confirmModal').style.display = 'flex';
+
+    // Wire confirm button (replace to avoid stacking listeners)
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    const freshBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(freshBtn, confirmBtn);
+
+    freshBtn.addEventListener('click', async () => {
+      closeModal();
+      statusEl.style.color = '#333';
+      statusEl.textContent = 'Sending request...';
+
+      try {
+        const formData = {
+          full_name: document.getElementById('full_name').value,
+          email: document.getElementById('email').value,
+          lesson_date: document.getElementById('lesson_date').value,
+          time_slot: document.getElementById('time_slot').value,
+          tail_number: document.getElementById('tail_number').value,
+        };
+
+        const response = await fetch(
+          'https://us-central1-jake-sorrell-flight-lessons.cloudfunctions.net/submitLessonRequest',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        if (!response.ok) throw new Error('Failed to submit request');
+
+        const { requestId } = await response.json();
+
+        const base = 'https://jakesorrell.com';
+        await emailjs.send('service_qjt49i4', 'template_sjocyhw', {
+          name: formData.full_name,
+          time: `${formData.lesson_date} at ${formData.time_slot}`,
+          full_name: formData.full_name,
+          email: formData.email,
+          lesson_date: formData.lesson_date,
+          time_slot: formData.time_slot,
+          tail_number: formData.tail_number,
+          confirmation_link: `${base}/confirm.html?id=${requestId}&action=confirm`,
+          deny_link: `${base}/confirm.html?id=${requestId}&action=deny`,
+        });
+
+        statusEl.style.color = 'green';
+        statusEl.textContent = 'Request sent! Jake will confirm by email shortly.';
+        document.getElementById('scheduleForm').reset();
+        document.getElementById('selectedSlotDisplay').style.display = 'none';
+        document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
+      } catch (error) {
+        statusEl.style.color = 'red';
+        statusEl.textContent = 'Something went wrong. Please try again or email jbsor2007@gmail.com directly.';
+        console.error('Error:', error);
       }
-
-      const { requestId } = await response.json();
-
-      // Send email to Jake via EmailJS (client-side — avoids server-side restrictions)
-      const base = 'https://jakesorrell.com';
-      await emailjs.send('service_qjt49i4', 'template_sjocyhw', {
-        name: formData.full_name,
-        time: `${formData.lesson_date} at ${formData.time_slot}`,
-        full_name: formData.full_name,
-        email: formData.email,
-        lesson_date: formData.lesson_date,
-        time_slot: formData.time_slot,
-        tail_number: formData.tail_number,
-        confirmation_link: `${base}/confirm.html?id=${requestId}&action=confirm`,
-        deny_link: `${base}/confirm.html?id=${requestId}&action=deny`,
-      });
-
-      statusEl.textContent = 'Request sent! Jake will confirm by email shortly.';
-      document.getElementById('scheduleForm').reset();
-      document.getElementById('selectedSlotDisplay').style.display = 'none';
-      document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
-    } catch (error) {
-      statusEl.textContent = 'Something went wrong. Please try again or email jbsor2007@gmail.com directly.';
-      console.error('Error:', error);
-    }
+    });
   });
 }
