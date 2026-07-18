@@ -92,19 +92,23 @@ exports.getUnavailableTimes = onRequest(async (req, res) => {
   if (req.method !== "GET") return res.status(405).send("Method not allowed");
 
   try {
-    const [confirmedSnap, customSnap] = await Promise.all([
+    const [confirmedSnap, pendingSnap, customSnap] = await Promise.all([
       db.collection("lesson_requests").where("status", "==", "confirmed").get(),
+      db.collection("lesson_requests").where("status", "==", "pending").get(),
       db.collection("unavailable_times").orderBy("created_at", "desc").get(),
     ]);
 
-    const confirmed = confirmedSnap.docs.map((doc) => ({
+    const mapLesson = (doc) => ({
       requestId: doc.id,
       full_name: doc.data().full_name,
       email: doc.data().email,
       date: doc.data().lesson_date,
       time_slot: doc.data().time_slot,
       tail_number: doc.data().tail_number,
-    }));
+    });
+
+    const confirmed = confirmedSnap.docs.map(mapLesson);
+    const pending   = pendingSnap.docs.map(mapLesson);
 
     const custom = customSnap.docs.map((doc) => ({
       id: doc.id,
@@ -112,7 +116,7 @@ exports.getUnavailableTimes = onRequest(async (req, res) => {
       created_at: undefined, // strip Firestore timestamp (not serialisable)
     }));
 
-    res.json({confirmed, custom});
+    res.json({confirmed, pending, custom});
   } catch (error) {
     logger.error("Error getting unavailable times:", error);
     res.status(500).json({error: "Error fetching data"});

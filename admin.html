@@ -148,6 +148,10 @@
       <h2>Custom Unavailable Times</h2>
       <ul class="item-list" id="blockList"><li class="empty">Loading…</li></ul>
 
+      <!-- Pending requests -->
+      <h2>Lesson Requests</h2>
+      <ul class="item-list" id="pendingList"><li class="empty">Loading…</li></ul>
+
       <!-- Confirmed lessons -->
       <h2>Upcoming Lessons</h2>
       <ul class="item-list" id="upcomingList"><li class="empty">Loading…</li></ul>
@@ -193,6 +197,7 @@
         const data = await res.json();
 
         renderBlockList(data.custom || []);
+        renderPendingList(data.pending || []);
         renderConfirmedList(data.confirmed || []);
       } catch {
         document.getElementById('loginError').textContent = 'Could not load data. Check your connection.';
@@ -215,6 +220,28 @@
           <button class="btn-del" onclick="deleteBlock('${b.id}')">Delete</button>
         </li>`;
       }).join('');
+    }
+
+    function renderPendingList(pending) {
+      const ul = document.getElementById('pendingList');
+      if (!pending.length) {
+        ul.innerHTML = '<li class="empty">No pending requests.</li>';
+        return;
+      }
+      // Sort soonest first
+      pending.sort((a, b) => a.date.localeCompare(b.date));
+      ul.innerHTML = pending.map(r =>
+        `<li style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+            <span><strong>${r.full_name}</strong>&nbsp;&nbsp;${r.tail_number}</span>
+            <a href="confirm.html?id=${r.requestId}&action=confirm"
+               style="text-decoration:none;">
+              <button class="btn-submit" style="width:auto;padding:5px 14px;font-size:0.85em;">Review</button>
+            </a>
+          </div>
+          <span class="meta">${formatDisplayDate(r.date)} &nbsp;${r.time_slot}</span>
+        </li>`
+      ).join('');
     }
 
     function renderConfirmedList(confirmed) {
