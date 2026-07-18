@@ -230,11 +230,12 @@
         .sort((a, b) => b.date.localeCompare(a.date));
 
       const lessonHTML = c =>
-        `<li>
-          <span>
-            <strong>${c.full_name}</strong>
-            <span class="meta"> &nbsp;${formatDisplayDate(c.date)} &nbsp;${c.time_slot} &nbsp;(${c.tail_number})</span>
-          </span>
+        `<li style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+            <span><strong>${c.full_name}</strong>&nbsp;&nbsp;${c.tail_number}</span>
+            <button class="btn-del" onclick="deleteLesson('${c.requestId}')">✕</button>
+          </div>
+          <span class="meta">${formatDisplayDate(c.date)} &nbsp;${c.time_slot}</span>
         </li>`;
 
       const upcomingEl = document.getElementById('upcomingList');
@@ -280,6 +281,21 @@
       } catch (e) {
         status.textContent = e.message === 'wrong password' ? 'Incorrect password.' : 'Error adding block.';
         status.className = 'status-msg err';
+      }
+    }
+
+    async function deleteLesson(requestId) {
+      if (!confirm('Delete this lesson? The time slot will become available again.')) return;
+      try {
+        const res = await fetch(`${BASE}/deleteLessonRequest`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adminPassword, requestId }),
+        });
+        if (!res.ok) throw new Error();
+        loadData();
+      } catch {
+        alert('Error deleting lesson. Please try again.');
       }
     }
 

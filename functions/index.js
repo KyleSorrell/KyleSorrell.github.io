@@ -171,6 +171,26 @@ exports.deleteUnavailableTime = onRequest(async (req, res) => {
   }
 });
 
+// Delete a lesson request entirely (admin only — frees the time slot)
+exports.deleteLessonRequest = onRequest(async (req, res) => {
+  setCors(req, res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+  if (req.method !== "POST") return res.status(405).send("Method not allowed");
+
+  try {
+    const {adminPassword, requestId} = req.body;
+    if (!verifyAdmin(adminPassword)) return res.status(401).json({error: "Unauthorized"});
+    if (!requestId) return res.status(400).json({error: "Missing requestId"});
+
+    await db.collection("lesson_requests").doc(requestId).delete();
+    logger.info(`Lesson request deleted by admin: ${requestId}`);
+    res.json({success: true});
+  } catch (error) {
+    logger.error("Error deleting lesson request:", error);
+    res.status(500).json({error: "Error deleting lesson"});
+  }
+});
+
 // Process Jake's confirmation/denial
 exports.processLessonDecision = onRequest(async (req, res) => {
   setCors(req, res);
