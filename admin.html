@@ -149,8 +149,11 @@
       <ul class="item-list" id="blockList"><li class="empty">Loading…</li></ul>
 
       <!-- Confirmed lessons -->
-      <h2>Confirmed Lessons (Auto-blocked)</h2>
-      <ul class="item-list" id="confirmedList"><li class="empty">Loading…</li></ul>
+      <h2>Upcoming Lessons</h2>
+      <ul class="item-list" id="upcomingList"><li class="empty">Loading…</li></ul>
+
+      <h2>Past Lessons</h2>
+      <ul class="item-list" id="pastList"><li class="empty">Loading…</li></ul>
 
     </div>
   </div>
@@ -215,19 +218,34 @@
     }
 
     function renderConfirmedList(confirmed) {
-      const ul = document.getElementById('confirmedList');
-      if (!confirmed.length) {
-        ul.innerHTML = '<li class="empty">No confirmed lessons yet.</li>';
-        return;
-      }
-      ul.innerHTML = confirmed.map(c =>
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcoming = confirmed
+        .filter(c => { const [y,m,d] = c.date.split('-').map(Number); return new Date(y,m-1,d) >= today; })
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const past = confirmed
+        .filter(c => { const [y,m,d] = c.date.split('-').map(Number); return new Date(y,m-1,d) < today; })
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      const lessonHTML = c =>
         `<li>
           <span>
             <strong>${c.full_name}</strong>
             <span class="meta"> &nbsp;${formatDisplayDate(c.date)} &nbsp;${c.time_slot} &nbsp;(${c.tail_number})</span>
           </span>
-        </li>`
-      ).join('');
+        </li>`;
+
+      const upcomingEl = document.getElementById('upcomingList');
+      upcomingEl.innerHTML = upcoming.length
+        ? upcoming.map(lessonHTML).join('')
+        : '<li class="empty">No upcoming lessons.</li>';
+
+      const pastEl = document.getElementById('pastList');
+      pastEl.innerHTML = past.length
+        ? past.map(lessonHTML).join('')
+        : '<li class="empty">No past lessons.</li>';
     }
 
     async function addBlock() {
